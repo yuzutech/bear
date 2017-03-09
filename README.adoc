@@ -1,0 +1,112 @@
+= Bear
+:source-highlighter: highlightjs
+:uri-grok-processor-elasticsearch: https://www.elastic.co/guide/en/elasticsearch/reference/master/grok-processor.html
+
+Logstash alternative in Java.
+
+_Bear_ is a library written in Java that can handle Grok patterns.
+This library is based on the {uri-grok-processor-elasticsearch}[Grok Processor] from Elasticsearch.
+
+== Migration
+
+Given the following Logstash configuration:
+
+[source,ruby]
+----
+if [type] == "apache-access-log" {
+  grok {
+    patterns_dir => "/opt/logstash/patterns"
+    match => [ "message","%{APACHE_ACCESS_LOG}" ]
+    match => [ "message","%{APACHE_ACCESS_LOG_SIMPLE}" ]
+    match => [ "message","%{APACHE_ACCESS_LOG_CONFLUENCE}" ]
+  }
+
+  date {
+     match => [ "date", "dd/MMM/yyyy:HH:mm:ss Z" ]
+  }
+
+  if ("abc" in [project]) and ([path] =~ /.*customer.*/) {
+     mutate {
+      add_field => { "application" => "crm" }
+     }
+  } else if ("aqz" in [projet]) and ([path] =~ /.*invoice.*/) {
+    mutate {
+      add_field => { "application" => "invoice" }
+    }
+  }
+
+  if [response] =~ /[45]../ {
+    mutate {
+      add_field => { "level" => "ERROR" }
+    }
+  } else {
+    mutate {
+      add_field => { "level" => "DEBUG" }
+    }
+  }
+}
+----
+
+You will create a new class that implements the interface `com.github.yuzutech.bear.Filter`:
+
+[source,java]
+----
+public ApacheAccessLogFilter(Map<String, String> patternBank) {
+  List<String> matchPatterns = new ArrayList<>();
+  matchPatterns.add("%{APACHE_ACCESS_LOG}");
+  matchPatterns.add("%{APACHE_ACCESS_LOG_SIMPLE}");
+  matchPatterns.add("%{APACHE_ACCESS_LOG_CONFLUENCE}");
+  this.grokProcessor = new GrokProcessor(patternBank, matchPatterns, "message", false, false); // <1>
+  this.formatter = DateTimeFormatter.ofPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US); // <2>
+  this.httpCode5xxOr4xxPattern = Pattern.compile("/[45]../"); // <3>
+}
+----
+<1> Instanciate a `GrokProcessor` to extract data
+<2> Instanciate a `DateTimeFormatter` to extract the timestamp
+<3> Instanciate a `Pattern` to configure the log level
+
+[source,java]
+----
+@Override
+public void execute(Event event) throws Exception {
+  if (event.equals("type", "apache-access-log")) {
+    grokProcessor.execute(event);
+    event.matchDate("date", formatter);
+    if (event.contains("project", "abc")) {
+      if (event.contains("path", "customer")) {
+        event.setFieldValue("application", "crm");
+      } else if (event.contains("path", "invoice")) {
+        event.setFieldValue("application", "invoice");
+      }
+    }
+    if (event.matches("response", httpCode5xxOr4xxPattern)) {
+      event.setFieldValue("level", "ERROR");
+    } else {
+      event.setFieldValue("level", "DEBUG");
+    }
+  }
+}
+----
+
+== Unit testing
+
+[source,java]
+----
+public void testApacheAccessLog() throws Exception {
+  // Given
+  Event event = new Event();
+  event.setFieldValue("project", "abc");
+  event.setFieldValue("type", "apache-access-log");
+  event.setFieldValue("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
+
+  // When
+  LinkyLogFilter filter = new LinkyLogFilter();
+  filter.execute(event);
+
+  // Then
+  assertThat(event.get("clientip")).isEqualTo("163.90.205.213");
+  assertThat(event.get("date")).isEqualTo("29/Nov/2012:10:22:50 +0100");
+  assertThat(event.get("application")).isEqualTo("ALPHABET");
+  assertThat(event.get("verb")).isEqualTo("POST");
+}
+----

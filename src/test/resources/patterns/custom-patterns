@@ -1,0 +1,11 @@
+# APACHE
+# date format: 17/Feb/2015:14:16:32 +0100
+APACHE_ACCESS_LOG_DATE %{MONTHDAY}/%{WORD}/%{YEAR}:%{HOUR}:%{MINUTE}:%{SECOND} %{DATA}
+# date format: Wed Dec 10 14:17:10 2014
+APACHE_ERROR_DATE %{WORD} %{WORD} %{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND} %{YEAR}
+# date format access or error
+APACHE_DATE (%{APACHE_ACCESS_LOG_DATE}|%{APACHE_ERROR_DATE})
+
+APACHE_ACCESS_LOG ^%{IP:clientip} \[%{APACHE_DATE:date}\] '%{DATA:application}' '%{WORD:verb} %{DATA:request} HTTP/%{DATA:httpversion}' %{DATA:response} size:(?:%{NUMBER:bytes}|-) 'dur-s:%{DATA:durationsec}' 'dur-ms:%{DATA:durationmillisec}' 'vhost:%{DATA:vhost}' 'ref:(?:%{DATA:referrer}|-)' 'uagent:%{DATA:agent}' 'resp-loca:(?:%{DATA:location}|-)'(?: 'tx:(?:%{DATA:perftx}|-)'|)
+APACHE_ACCESS_LOG_SIMPLE ^%{IP:clientip} \[%{APACHE_DATE:date}\] '%{WORD:verb} %{DATA:request} HTTP/%{DATA:httpversion}' %{DATA:response} size:(?:%{NUMBER:bytes}|-) 'dur-s:%{DATA:durationsec}' 'dur-ms:%{DATA:durationmillisec}' 'vhost:%{DATA:vhost}' 'ref:(?:%{URI:referrer}|-)' 'uagent:%{DATA:agent}' 'resp-loca:(?:%{DATA:location}|-)'
+APACHE_ACCESS_LOG_CONFLUENCE ^%{IP:clientip} - - \[%{APACHE_ACCESS_LOG_DATE:date}\] "%{WORD:verb} %{DATA:request} HTTP/%{DATA:httpversion}" %{DATA:response} %{NUMBER:bytes} "%{DATA:referrer}" "%{DATA:agent}" %{NUMBER:durationmillisec}
