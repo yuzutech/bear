@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
+import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
 
 public class EventTest {
@@ -110,6 +112,23 @@ public class EventTest {
     assertThat(event.get("data")).isEqualTo("abc");
     assertThatThrownBy(() -> event.toInt("data"))
         .isInstanceOf(NumberFormatException.class);
-    ;
+  }
+
+  @Test
+  public void should_match_date() {
+    Event event = new Event();
+    event.set("date", "Wed Dec 10 14:17:10 2014");
+    event.matchDate("date", DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(Locale.US));
+    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000+01:00");
+  }
+
+  @Test
+  public void should_match_dates() {
+    Event event = new Event();
+    event.set("date", "Wed Dec 10 14:17:10 2014");
+    event.matchDate("date", Arrays.asList(
+        DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(Locale.US),
+        DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US)));
+    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000+01:00");
   }
 }

@@ -142,8 +142,27 @@ public class Event {
   public void matchDate(String key, DateTimeFormatter formatter) {
     String fieldValue = get(key, String.class);
     if (fieldValue != null) {
-      DateTime dateTime = formatter.parseDateTime(fieldValue);
-      data.put("timestamp", dateTime.toString());
+      try {
+        DateTime dateTime = formatter.parseDateTime(fieldValue);
+        data.put("timestamp", dateTime.toString());
+      } catch (IllegalArgumentException e) {
+        // Ignore...
+      }
+    }
+  }
+
+  public void matchDate(String key, List<DateTimeFormatter> formatters) {
+    String fieldValue = get(key, String.class);
+    if (fieldValue != null) {
+      for (DateTimeFormatter formatter : formatters) {
+        try {
+          DateTime dateTime = formatter.parseDateTime(fieldValue);
+          data.put("timestamp", dateTime.toString());
+        } catch (IllegalArgumentException e) {
+          // Ignore...
+        }
+      }
+
     }
   }
 
