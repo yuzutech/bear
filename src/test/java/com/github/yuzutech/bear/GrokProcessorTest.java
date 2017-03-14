@@ -32,18 +32,18 @@ public class GrokProcessorTest {
   public void testMatch() throws Exception {
     String fieldName = "test";
     Event event = new Event();
-    event.setFieldValue(fieldName, "1");
+    event.set(fieldName, "1");
     GrokProcessor processor = new GrokProcessor(Collections.singletonMap("ONE", "1"),
         Collections.singletonList("%{ONE:one}"), fieldName, false, false);
     processor.execute(event);
-    assertThat(event.getFieldValue("one", String.class)).isEqualTo("1");
+    assertThat(event.get("one", String.class)).isEqualTo("1");
   }
 
   @Test
   public void testNoMatch() {
     String fieldName = "test";
     Event event = new Event();
-    event.setFieldValue(fieldName, "23");
+    event.set(fieldName, "23");
     GrokProcessor processor = new GrokProcessor(Collections.singletonMap("ONE", "1"),
         Collections.singletonList("%{ONE:one}"), fieldName, false, false);
     assertThatThrownBy(() -> processor.execute(event))

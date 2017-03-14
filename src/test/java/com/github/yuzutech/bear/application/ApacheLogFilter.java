@@ -26,10 +26,14 @@ public class ApacheLogFilter {
     filters.add(new ApacheAccessLogFilter(patternBank));
   }
 
-  public void execute(Event event) throws Exception {
+  public Event execute(Event event) throws Exception {
     for (Filter filter : filters) {
-      filter.execute(event);
+      event = filter.execute(event);
+      if (event == null) {
+        return null;
+      }
     }
+    return event;
   }
 
   private static final String[] PATTERN_NAMES = new String[]{

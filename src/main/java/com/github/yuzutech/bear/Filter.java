@@ -2,5 +2,5 @@ package com.github.yuzutech.bear;
 
 public interface Filter {
 
-  void execute(Event event) throws Exception;
+  Event execute(Event event) throws Exception;
 }

@@ -10,6 +10,7 @@
 
   <properties>
     <joni.version>2.1.6</joni.version>
+    <joda-time.version>2.9.7</joda-time.version>
     <metrics.version>3.1.2</metrics.version>
     <slf4j.version>1.7.21</slf4j.version>
     <logback.version>1.2.1</logback.version>
@@ -23,6 +24,11 @@
       <groupId>org.jruby.joni</groupId>
       <artifactId>joni</artifactId>
       <version>${joni.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+      <version>${joda-time.version}</version>
     </dependency>
     <dependency>
       <groupId>io.dropwizard.metrics</groupId>

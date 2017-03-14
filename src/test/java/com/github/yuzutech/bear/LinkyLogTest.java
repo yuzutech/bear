@@ -10,9 +10,9 @@ public class LinkyLogTest {
   @Test
   public void testApacheAccessLog() throws Exception {
     Event event = new Event();
-    event.setFieldValue("project", "abc");
-    event.setFieldValue("type", "apache-access-log");
-    event.setFieldValue("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
+    event.set("project", "abc");
+    event.set("type", "apache-access-log");
+    event.set("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
 
     ApacheLogFilter filter = new ApacheLogFilter();
     filter.execute(event);

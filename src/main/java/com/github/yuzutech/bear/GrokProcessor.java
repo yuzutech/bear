@@ -44,7 +44,7 @@ public final class GrokProcessor {
   }
 
   public void execute(Event event) throws Exception {
-    String fieldValue = event.getFieldValue(matchField, String.class, ignoreMissing);
+    String fieldValue = event.get(matchField, String.class);
 
     if (fieldValue == null && ignoreMissing) {
       return;
@@ -58,17 +58,17 @@ public final class GrokProcessor {
     }
 
     matches.entrySet()
-        .forEach((e) -> event.setFieldValue(e.getKey(), e.getValue()));
+        .forEach((e) -> event.set(e.getKey(), e.getValue()));
 
     if (traceMatch) {
       if (matchPatterns.size() > 1) {
         @SuppressWarnings("unchecked")
-        HashMap<String, String> matchMap = (HashMap<String, String>) event.getFieldValue(PATTERN_MATCH_KEY, Object.class);
+        HashMap<String, String> matchMap = (HashMap<String, String>) event.get(PATTERN_MATCH_KEY, Object.class);
         matchMap.keySet().stream().findFirst().ifPresent((index) -> {
-          event.setFieldValue(PATTERN_MATCH_KEY, index);
+          event.set(PATTERN_MATCH_KEY, index);
         });
       } else {
-        event.setFieldValue(PATTERN_MATCH_KEY, "0");
+        event.set(PATTERN_MATCH_KEY, "0");
       }
     }
   }

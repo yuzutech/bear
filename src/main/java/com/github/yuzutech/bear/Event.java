@@ -1,12 +1,15 @@
 package com.github.yuzutech.bear;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
+
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
 
 public class Event {
 
@@ -19,36 +22,109 @@ public class Event {
     this.data = data;
   }
 
-  public void setFieldValue(String key, Object value) {
-    data.put(key, value);
+  // get
+
+  public String get(String key) {
+    return get(key, String.class);
   }
 
-  public <T> T getFieldValue(String key, Class<T> clazz) {
+  public Integer getInt(String key) {
+    return get(key, Integer.class);
+  }
+
+  public <T> T get(String key, Class<T> clazz) {
     Object value = data.get(key);
     if (value == null) {
-      throw new NullPointerException("field [" + key + "] does not exist");
+      return null;
     }
     if (clazz.isInstance(value)) {
       return clazz.cast(value);
     }
-    throw new IllegalArgumentException("field [" + key + "] of type [" + value.getClass().getName() + "] cannot be cast to [" + clazz.getName() + "]");
+    throw new ClassCastException("field [" + key + "] of type [" + value.getClass().getName() + "] cannot be cast to [" + clazz.getName() + "]");
   }
 
-  public <T> T getFieldValue(String key, Class<T> clazz, boolean ignoreMissing) {
+  public boolean hasField(String key) {
+    return data.get(key) != null;
+  }
+
+  @SuppressWarnings("unchecked")
+  public <T> T getFirst(String key, Class<T> clazz) {
     try {
-      return getFieldValue(key, clazz);
-    } catch (NullPointerException e) {
-      if (ignoreMissing) {
-        return null;
-      } else {
-        throw e;
+      Collection values = get(key, Collection.class);
+      if (values != null) {
+        return (T) values.stream().findFirst().orElse(null);
       }
+      return null;
+    } catch (ClassCastException cce) {
+      return get(key, clazz);
     }
   }
 
-  private boolean hasField(String key) {
-    return data.get(key) != null;
+  // add
+
+  public Event add(String key, String value) {
+    add(key, value, String.class);
+    return this;
   }
+
+  @SuppressWarnings("unchecked")
+  public <T> Event add(String key, T value, Class<T> clazz) {
+    try {
+      Collection values = get(key, Collection.class);
+      if (values != null) {
+        values.add(value);
+      } else {
+        data.put(key, value);
+      }
+    } catch (ClassCastException e) {
+      T currentValue = get(key, clazz);
+      List<T> result = new ArrayList<>();
+      result.add(currentValue);
+      result.add(value);
+      data.put(key, result);
+    }
+    return this;
+  }
+
+  // set
+
+  public <T> Event set(String key, T value) {
+    data.put(key, value);
+    return this;
+  }
+
+  // update
+
+  public Event update(String key, Function<String, String> transform) {
+    return update(key, String.class, transform);
+  }
+
+  public <T> Event update(String key, Class<T> clazz, Function<T, T> transform) {
+    T value = get(key, clazz);
+    if (value == null) {
+      return this;
+    }
+    data.put(key, transform.apply(value));
+    return this;
+  }
+
+  // remove
+
+  public Event remove(String key) {
+    data.remove(key);
+    return this;
+  }
+
+  // convert
+
+  public void toInt(String key) {
+    String value = get(key, String.class);
+    if (value != null) {
+      set(key, Integer.valueOf(value));
+    }
+  }
+
+  // function
 
   public boolean equals(String key, String value) {
     return value.equals(get(key));
@@ -56,29 +132,23 @@ public class Event {
 
   public boolean contains(String key, String value) {
     try {
-      List fieldValues = getFieldValue(key, ArrayList.class, true);
-      if (fieldValues == null) {
-        return false;
-      }
-      return fieldValues.contains(value);
-    } catch (IllegalArgumentException e) {
-      String fieldValue = get(key);
-      return fieldValue.contains(value);
+      Collection values = get(key, Collection.class);
+      return values != null && values.contains(value);
+    } catch (ClassCastException e) {
+      return get(key).contains(value);
     }
   }
 
-  public String get(String key) {
-    return getFieldValue(key, String.class);
-  }
-
   public void matchDate(String key, DateTimeFormatter formatter) {
-    String fieldValue = getFieldValue(key, String.class, false);
-    LocalDateTime dateTime = LocalDateTime.parse(fieldValue, formatter);
-    setFieldValue("timestamp", dateTime.toString());
+    String fieldValue = get(key, String.class);
+    if (fieldValue != null) {
+      DateTime dateTime = formatter.parseDateTime(fieldValue);
+      data.put("timestamp", dateTime.toString());
+    }
   }
 
   public boolean matches(String key, Pattern pattern) {
-    String fieldValue = getFieldValue(key, String.class);
-    return pattern.matcher(fieldValue).matches();
+    String fieldValue = get(key, String.class);
+    return fieldValue != null && pattern.matcher(fieldValue).matches();
   }
 }
