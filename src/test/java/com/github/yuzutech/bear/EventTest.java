@@ -115,11 +115,20 @@ public class EventTest {
   }
 
   @Test
+  public void should_convert_a_double_to_int() {
+    Event event = new Event();
+    event.set("data", "1.25");
+    assertThat(event.get("data")).isEqualTo("1.25");
+    event.toInt("data");
+    assertThat(event.getInt("data")).isEqualTo(1);
+  }
+
+  @Test
   public void should_match_date() {
     Event event = new Event();
     event.set("date", "Wed Dec 10 14:17:10 2014");
     event.matchDate("date", DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(Locale.US));
-    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000+01:00");
+    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000");
   }
 
   @Test
@@ -129,6 +138,6 @@ public class EventTest {
     event.matchDate("date", Arrays.asList(
         DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(Locale.US),
         DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US)));
-    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000+01:00");
+    assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000");
   }
 }

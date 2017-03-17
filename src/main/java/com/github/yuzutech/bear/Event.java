@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.joda.time.DateTime;
+import org.joda.time.LocalDateTime;
 import org.joda.time.format.DateTimeFormatter;
 
 public class Event {
@@ -120,7 +121,7 @@ public class Event {
   public void toInt(String key) {
     String value = get(key, String.class);
     if (value != null) {
-      set(key, Integer.valueOf(value));
+      set(key, Double.valueOf(value).intValue());
     }
   }
 
@@ -143,7 +144,7 @@ public class Event {
     String fieldValue = get(key, String.class);
     if (fieldValue != null) {
       try {
-        DateTime dateTime = formatter.parseDateTime(fieldValue);
+        LocalDateTime dateTime = formatter.parseLocalDateTime(fieldValue);
         data.put("timestamp", dateTime.toString());
       } catch (IllegalArgumentException e) {
         // Ignore...
@@ -156,7 +157,7 @@ public class Event {
     if (fieldValue != null) {
       for (DateTimeFormatter formatter : formatters) {
         try {
-          DateTime dateTime = formatter.parseDateTime(fieldValue);
+          LocalDateTime dateTime = formatter.parseLocalDateTime(fieldValue);
           data.put("timestamp", dateTime.toString());
         } catch (IllegalArgumentException e) {
           // Ignore...
@@ -169,5 +170,13 @@ public class Event {
   public boolean matches(String key, Pattern pattern) {
     String fieldValue = get(key, String.class);
     return fieldValue != null && pattern.matcher(fieldValue).matches();
+  }
+
+  public Matcher match(String key, Pattern pattern) {
+    String data = get(key, String.class);
+    if (data != null && !data.isEmpty()) {
+      return pattern.matcher(data);
+    }
+    return null;
   }
 }
