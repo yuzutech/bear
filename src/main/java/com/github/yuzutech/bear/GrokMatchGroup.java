@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package com.github.yuzutech.bear;
 
 final class GrokMatchGroup {

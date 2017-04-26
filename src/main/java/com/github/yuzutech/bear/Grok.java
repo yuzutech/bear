@@ -56,7 +56,6 @@ final class Grok {
   private final Map<String, String> patternBank;
   private final boolean namedCaptures;
   private final Regex compiledExpression;
-  private final String expression;
 
   Grok(Map<String, String> patternBank, String grokPattern) {
     this(patternBank, grokPattern, true);
@@ -67,21 +66,19 @@ final class Grok {
     this.patternBank = patternBank;
     this.namedCaptures = namedCaptures;
 
-    this.expression = toRegex(grokPattern);
+    String expression = toRegex(grokPattern);
     byte[] expressionBytes = expression.getBytes(StandardCharsets.UTF_8);
     this.compiledExpression = new Regex(expressionBytes, 0, expressionBytes.length, Option.DEFAULT, UTF8Encoding.INSTANCE);
   }
 
-  public String groupMatch(String name, Region region, String pattern) {
+  private String groupMatch(String name, Region region, String pattern) {
     try {
       int number = GROK_PATTERN_REGEX.nameToBackrefNumber(name.getBytes(StandardCharsets.UTF_8), 0,
           name.getBytes(StandardCharsets.UTF_8).length, region);
       int begin = region.beg[number];
       int end = region.end[number];
       return new String(pattern.getBytes(StandardCharsets.UTF_8), begin, end - begin, StandardCharsets.UTF_8);
-    } catch (StringIndexOutOfBoundsException e) {
-      return null;
-    } catch (ValueException e) {
+    } catch (StringIndexOutOfBoundsException | ValueException e) {
       return null;
     }
   }
@@ -91,7 +88,7 @@ final class Grok {
    *
    * @return named regex expression
    */
-  public String toRegex(String grokPattern) {
+  private String toRegex(String grokPattern) {
     byte[] grokPatternBytes = grokPattern.getBytes(StandardCharsets.UTF_8);
     Matcher matcher = GROK_PATTERN_REGEX.matcher(grokPatternBytes);
 
@@ -143,7 +140,7 @@ final class Grok {
    *     the text to match and extract values from.
    * @return a map containing field names and their respective coerced values that matched.
    */
-  public Map<String, Object> captures(String text) {
+  Map<String, Object> captures(String text) {
     byte[] textAsBytes = text.getBytes(StandardCharsets.UTF_8);
     Map<String, Object> fields = new HashMap<>();
     Matcher matcher = compiledExpression.matcher(textAsBytes);

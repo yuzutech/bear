@@ -29,7 +29,7 @@ import org.junit.Test;
 public class GrokProcessorTest {
 
   @Test
-  public void testMatch() throws Exception {
+  public void should_match() throws Exception {
     String fieldName = "test";
     Event event = new Event();
     event.set(fieldName, "1");
@@ -40,7 +40,7 @@ public class GrokProcessorTest {
   }
 
   @Test
-  public void testNoMatch() {
+  public void should_not_match() {
     String fieldName = "test";
     Event event = new Event();
     event.set(fieldName, "23");

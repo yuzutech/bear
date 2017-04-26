@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.Timer;
-import com.github.yuzutech.bear.application.ApacheLogFilter;
+import com.github.yuzutech.bear.application.ApacheLogProcessor;
 
 public class ApacheLogBenchmark {
 
@@ -25,14 +25,14 @@ public class ApacheLogBenchmark {
            .build();
     infoReporter.start(5, TimeUnit.SECONDS);
     int events = 10000000;
-    ApacheLogFilter filter = new ApacheLogFilter();
+    ApacheLogProcessor processor = new ApacheLogProcessor();
     for (int i = 0; i < events; i++) {
       Timer.Context processingTime = timer.time();
       Event event = new Event();
       event.set("project", "abc");
       event.set("type", "apache-access-log");
       event.set("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
-      filter.execute(event);
+      processor.execute(event);
       processingTime.stop();
     }
   }

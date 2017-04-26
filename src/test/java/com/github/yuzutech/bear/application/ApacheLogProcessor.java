@@ -12,23 +12,23 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.yuzutech.bear.Event;
-import com.github.yuzutech.bear.Filter;
+import com.github.yuzutech.bear.Processor;
 import com.github.yuzutech.bear.benchmark.ApacheLogBenchmark;
 
-public class ApacheLogFilter {
+public class ApacheLogProcessor {
 
   private final Map<String, String> patternBank;
-  private List<Filter> filters;
+  private List<Processor> processors;
 
-  public ApacheLogFilter() throws IOException {
+  public ApacheLogProcessor() throws IOException {
     this.patternBank = loadBuiltinPatterns();
-    this.filters = new ArrayList<>();
-    filters.add(new ApacheAccessLogFilter(patternBank));
+    this.processors = new ArrayList<>();
+    processors.add(new ApacheAccessLogProcessor(patternBank));
   }
 
   public Event execute(Event event) throws Exception {
-    for (Filter filter : filters) {
-      event = filter.execute(event);
+    for (Processor processor : processors) {
+      event = processor.execute(event);
       if (event == null) {
         return null;
       }

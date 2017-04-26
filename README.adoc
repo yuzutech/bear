@@ -47,11 +47,11 @@ if [type] == "apache-access-log" {
 }
 ----
 
-You will create a new class that implements the interface `com.github.yuzutech.bear.Filter`:
+You will create a new class that implements the interface `com.github.yuzutech.bear.Processor`:
 
 [source,java]
 ----
-public ApacheAccessLogFilter(Map<String, String> patternBank) {
+public ApacheAccessLogProcessor(Map<String, String> patternBank) {
   List<String> matchPatterns = new ArrayList<>();
   matchPatterns.add("%{APACHE_ACCESS_LOG}");
   matchPatterns.add("%{APACHE_ACCESS_LOG_SIMPLE}");
@@ -94,14 +94,15 @@ public void execute(Event event) throws Exception {
 ----
 public void testApacheAccessLog() throws Exception {
   // Given
+  Map<String, String> patternBank = loadBuiltinPatterns();
   Event event = new Event();
   event.setFieldValue("project", "abc");
   event.setFieldValue("type", "apache-access-log");
   event.setFieldValue("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
 
   // When
-  LinkyLogFilter filter = new LinkyLogFilter();
-  filter.execute(event);
+  ApacheAccessLogProcessor processor = new ApacheAccessLogProcessor(patternBank);
+  processor.execute(event);
 
   // Then
   assertThat(event.get("clientip")).isEqualTo("163.90.205.213");

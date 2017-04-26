@@ -16,18 +16,15 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 package com.github.yuzutech.bear;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public final class GrokProcessor {
 
-  public static final String TYPE = "grok";
-  private static final String PATTERN_MATCH_KEY = "_ingest._grok_match_index";
+  private static final String PATTERN_MATCH_KEY = "_bear._grok_match_index";
 
   private final String matchField;
   private final List<String> matchPatterns;
@@ -43,7 +40,7 @@ public final class GrokProcessor {
     this.ignoreMissing = ignoreMissing;
   }
 
-  public void execute(Event event) throws Exception {
+  public void execute(Event event) {
     String fieldValue = event.get(matchField, String.class);
 
     if (fieldValue == null && ignoreMissing) {
@@ -57,8 +54,7 @@ public final class GrokProcessor {
       throw new IllegalArgumentException("Provided Grok expressions do not match field value: [" + fieldValue + "]");
     }
 
-    matches.entrySet()
-        .forEach((e) -> event.set(e.getKey(), e.getValue()));
+    matches.forEach(event::set);
 
     if (traceMatch) {
       if (matchPatterns.size() > 1) {
@@ -73,26 +69,10 @@ public final class GrokProcessor {
     }
   }
 
-  Grok getGrok() {
-    return grok;
-  }
-
-  boolean isIgnoreMissing() {
-    return ignoreMissing;
-  }
-
-  String getMatchField() {
-    return matchField;
-  }
-
-  List<String> getMatchPatterns() {
-    return matchPatterns;
-  }
-
-  static String combinePatterns(List<String> patterns, boolean traceMatch) {
-    String combinedPattern;
+  private static String combinePatterns(List<String> patterns, boolean traceMatch) {
+    StringBuilder combinedPattern;
     if (patterns.size() > 1) {
-      combinedPattern = "";
+      combinedPattern = new StringBuilder();
       for (int i = 0; i < patterns.size(); i++) {
         String pattern = patterns.get(i);
         String valueWrap;
@@ -101,39 +81,16 @@ public final class GrokProcessor {
         } else {
           valueWrap = "(?:" + patterns.get(i) + ")";
         }
-        if (combinedPattern.equals("")) {
-          combinedPattern = valueWrap;
+        if (combinedPattern.toString().equals("")) {
+          combinedPattern = new StringBuilder(valueWrap);
         } else {
-          combinedPattern = combinedPattern + "|" + valueWrap;
+          combinedPattern.append("|").append(valueWrap);
         }
       }
     } else {
-      combinedPattern = patterns.get(0);
+      combinedPattern = new StringBuilder(patterns.get(0));
     }
 
-    return combinedPattern;
-  }
-
-  public static final class Factory {
-
-    private final Map<String, String> builtinPatterns;
-
-    public Factory(Map<String, String> builtinPatterns) {
-      this.builtinPatterns = builtinPatterns;
-    }
-
-    public GrokProcessor create(Map<String, Object> config) throws Exception {
-      Map<String, String> patternBank = new HashMap<>(builtinPatterns);
-      List<String> matchPatterns = new ArrayList<>();
-      String matchField = "";
-      boolean traceMatch = false;
-      boolean ignoreMissing = false;
-      try {
-        return new GrokProcessor(patternBank, matchPatterns, matchField, traceMatch, ignoreMissing);
-      } catch (Exception e) {
-        throw new IllegalArgumentException(TYPE + " patterns - " + "Invalid regex pattern found in: " + matchPatterns, e);
-      }
-
-    }
+    return combinedPattern.toString();
   }
 }

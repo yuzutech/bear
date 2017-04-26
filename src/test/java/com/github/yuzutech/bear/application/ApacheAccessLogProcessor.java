@@ -10,27 +10,27 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import com.github.yuzutech.bear.Event;
-import com.github.yuzutech.bear.Filter;
+import com.github.yuzutech.bear.Processor;
 import com.github.yuzutech.bear.GrokProcessor;
 
-public class ApacheAccessLogFilter implements Filter {
+public class ApacheAccessLogProcessor implements Processor {
 
   private GrokProcessor grokProcessor;
   private final DateTimeFormatter formatter;
   private final Pattern httpCode5xxOr4xxPattern;
 
-  public ApacheAccessLogFilter(Map<String, String> patternBank) {
+  public ApacheAccessLogProcessor(Map<String, String> patternBank) {
     List<String> matchPatterns = new ArrayList<>();
     matchPatterns.add("%{APACHE_ACCESS_LOG}");
     matchPatterns.add("%{APACHE_ACCESS_LOG_SIMPLE}");
     matchPatterns.add("%{APACHE_ACCESS_LOG_CONFLUENCE}");
     this.grokProcessor = new GrokProcessor(patternBank, matchPatterns, "message", false, false);
     this.formatter = DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US);
-    this.httpCode5xxOr4xxPattern = Pattern.compile("/[45]../");
+    this.httpCode5xxOr4xxPattern = Pattern.compile("[45]..");
   }
 
   @Override
-  public Event execute(Event event) throws Exception {
+  public Event execute(Event event) {
     if (event.equals("type", "apache-access-log")) {
       grokProcessor.execute(event);
       event.matchDate("date", formatter);

@@ -2,10 +2,10 @@ package com.github.yuzutech.bear;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.github.yuzutech.bear.application.ApacheLogFilter;
+import com.github.yuzutech.bear.application.ApacheLogProcessor;
 import org.junit.Test;
 
-public class LinkyLogTest {
+public class ApacheLogProcessorTest {
 
   @Test
   public void testApacheAccessLog() throws Exception {
@@ -14,8 +14,8 @@ public class LinkyLogTest {
     event.set("type", "apache-access-log");
     event.set("message", "163.90.205.213 [29/Nov/2012:10:22:50 +0100] 'ALPHABET' 'POST request HTTP/1.1' 123 size:6644 'dur-s:0' 'dur-ms:474627' 'vhost:vhost' 'ref:ref' 'uagent:agent' 'resp-loca:respLoca' 'tx:perftx'");
 
-    ApacheLogFilter filter = new ApacheLogFilter();
-    filter.execute(event);
+    ApacheLogProcessor processor = new ApacheLogProcessor();
+    processor.execute(event);
 
     assertThat(event.get("clientip")).isEqualTo("163.90.205.213");
     assertThat(event.get("date")).isEqualTo("29/Nov/2012:10:22:50 +0100");

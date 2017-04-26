@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.joda.time.format.DateTimeFormat;
 import org.junit.Test;
@@ -139,5 +141,37 @@ public class EventTest {
         DateTimeFormat.forPattern("EEE MMM dd HH:mm:ss yyyy").withLocale(Locale.US),
         DateTimeFormat.forPattern("dd/MMM/yyyy:HH:mm:ss Z").withLocale(Locale.US)));
     assertThat(event.get("timestamp")).isEqualTo("2014-12-10T14:17:10.000");
+  }
+
+  @Test
+  public void should_match_pattern() {
+    Event event = new Event();
+    event.set("response", "404 Not Found");
+
+    Pattern httpCode5xxOr4xxPattern = Pattern.compile("^([45]..) ([a-zA-Z ]+)");
+    Matcher match = event.match("response", httpCode5xxOr4xxPattern);
+    assertThat(match.matches()).isTrue();
+    assertThat(match.group(1)).isEqualTo("404");
+    assertThat(match.group(2)).isEqualTo("Not Found");
+
+    match = event.match("missing", httpCode5xxOr4xxPattern);
+    assertThat(match).isNull();
+  }
+
+  @Test
+  public void should_matches_pattern() {
+    Event event = new Event();
+    event.set("response", "404");
+
+    Pattern httpCode5xxOr4xxPattern = Pattern.compile("^[45]..");
+    assertThat(event.matches("response", httpCode5xxOr4xxPattern)).isTrue();
+
+    event = new Event();
+    event.set("response", "500");
+    assertThat(event.matches("response", httpCode5xxOr4xxPattern)).isTrue();
+
+    event = new Event();
+    event.set("response", "200");
+    assertThat(event.matches("response", httpCode5xxOr4xxPattern)).isFalse();
   }
 }
